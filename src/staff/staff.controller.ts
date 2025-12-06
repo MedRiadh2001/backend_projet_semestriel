@@ -32,13 +32,13 @@ export class StaffController {
         return this.staffService.getStaffById(id);
     }
 
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles(RolesEnum.ADMIN)
-    @ApiBearerAuth()
-    @Get('admin-only')
-    adminRoute() {
-        return { message: 'Seul l’admin peut accéder à cette route' };
-    }
+    // @UseGuards(JwtAuthGuard, RolesGuard)
+    // @Roles(RolesEnum.ADMIN)
+    // @ApiBearerAuth()
+    // @Get('admin-only')
+    // adminRoute() {
+    //     return { message: 'Seul l’admin peut accéder à cette route' };
+    // }
 
     @Post()
     @UseGuards(JwtAuthGuard, RolesGuard)
