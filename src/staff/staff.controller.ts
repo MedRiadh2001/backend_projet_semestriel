@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { StaffService } from './staff.service';
 import { CreateStaffDto } from './types/dtos/CreateStaffDto.dto';
 import { UpdateStaffDto } from './types/dtos/UpdateStaffDto.dto';
@@ -7,6 +7,8 @@ import { RolesEnum } from './types/enums/role.enum';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { RolesGuard } from '../shared/guards/RoleGuard.guard';
 import { Roles } from '../shared/decorators/RoleDecorator.decorator';
+import { ChangePasswordDto } from './types/dtos/ChangePasswordDto.dto';
+import { ResetPasswordAdminDto } from './types/dtos/ResetPasswordAdminDto.dto';
 
 @ApiTags('Staff')
 @Controller('staff')
@@ -56,6 +58,23 @@ export class StaffController {
     @ApiOperation({ summary: 'Update existing staff' })
     update(@Param('id') id: string, @Body() updateStaffDto: UpdateStaffDto) {
         return this.staffService.updateStaff(id, updateStaffDto);
+    }
+
+    @Patch('change-password')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Change staff password' })
+    changePassword(@Req() req, @Body() dto: ChangePasswordDto) {
+        return this.staffService.changePassword(req.user.id, dto);
+    }
+
+    @Patch('reset-password/:id')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(RolesEnum.ADMIN)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: "Admin resets another user's password" })
+    resetPassword(@Req() req, @Param('id') staffId: string, @Body() dto: ResetPasswordAdminDto) {
+        return this.staffService.resetPasswordByAdmin(req.user.id, staffId, dto);
     }
 
     @Delete(':id')

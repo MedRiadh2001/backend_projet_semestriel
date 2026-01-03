@@ -1,15 +1,19 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsDateString, IsEnum, IsNotEmpty, IsUUID } from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { IsDate, IsDateString, IsEnum, IsNotEmpty, IsOptional, IsUUID, ValidateNested } from "class-validator";
 import { ReservationStatusEnum } from "../enums/ReservationStatus.enum";
+import { Type } from "class-transformer";
+import { CreateClientDto } from "./CreateClientDto.dto";
 
 export class CreateReservationDto {
 
     @ApiProperty({ example: '2026-01-10' })
-    @IsDateString()
+    @IsDate()
+    @Type(() => Date)
     startDate: Date;
 
     @ApiProperty({ example: '2026-01-15' })
-    @IsDateString()
+    @IsDate()
+    @Type(() => Date)
     endDate: Date;
 
     @ApiProperty({ enum: ReservationStatusEnum })
@@ -21,8 +25,14 @@ export class CreateReservationDto {
     @IsNotEmpty()
     roomId: string;
 
-    @ApiProperty()
-    @IsUUID()
-    @IsNotEmpty()
-    clientId: string;
+    // @ApiProperty()
+    // @IsUUID()
+    // @IsNotEmpty()
+    // clientId: string;
+
+    @IsOptional()
+    @ApiPropertyOptional()
+    @ValidateNested({ each: true })
+    @Type(() => CreateClientDto)
+    createClientDto?: CreateClientDto;
 }

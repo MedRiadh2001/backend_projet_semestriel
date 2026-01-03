@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { StaffRepository } from './repository/Staff.repository';
 import { IStaff } from './types/interfaces/IStaff.interface';
 import * as bcrypt from 'bcrypt';
 import { CreateStaffDto } from './types/dtos/CreateStaffDto.dto';
 import { UpdateStaffDto } from './types/dtos/UpdateStaffDto.dto';
+import { ChangePasswordDto } from './types/dtos/ChangePasswordDto.dto';
+import { ResetPasswordAdminDto } from './types/dtos/ResetPasswordAdminDto.dto';
 
 @Injectable()
 export class StaffService {
@@ -45,6 +47,37 @@ export class StaffService {
         if (email) { staff.email = email };
         if (phone) { staff.phone = phone };
         if (role) { staff.role = role };
+
+        return this.staffRepository.save(staff);
+    }
+
+    async changePassword(staffId: string, dto: ChangePasswordDto) {
+        const staff = await this.staffRepository.findOne({ where: { id: staffId } });
+        if (!staff) throw new NotFoundException('Staff not found');
+
+        const isMatch = await bcrypt.compare(dto.oldPassword, staff.password);
+        if (!isMatch) throw new UnauthorizedException('Old password is incorrect');
+
+        if (dto.newPassword !== dto.confirmNewPassword) {
+            throw new BadRequestException('New password and confirmation do not match');
+        }
+
+        const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+        staff.password = hashedPassword;
+
+        return this.staffRepository.save(staff);
+    }
+
+    async resetPasswordByAdmin(adminId: string, staffId: string, resetPasswordDtoAdmin: ResetPasswordAdminDto) {
+        const admin = await this.staffRepository.findOne({ where: { id: adminId } });
+        if (!admin) throw new NotFoundException('Admin not found');
+        if (admin.role !== 'ADMIN') throw new UnauthorizedException('Only admins can reset passwords');
+
+        const staff = await this.staffRepository.findOne({ where: { id: staffId } });
+        if (!staff) throw new NotFoundException('Staff not found');
+
+        const hashedPassword = await bcrypt.hash(resetPasswordDtoAdmin.newPassword, 10);
+        staff.password = hashedPassword;
 
         return this.staffRepository.save(staff);
     }

@@ -45,7 +45,25 @@ export class ReservationController {
         return this.reservationService.updateReservation(id, dto);
     }
 
-    F
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(RolesEnum.RECEPTIONIST)
+    @ApiBearerAuth()
+    @Patch(':id/confirm')
+    confirm(@Param('id') id: string) {
+        return this.reservationService.confirmReservation(id);
+    }
+    
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(RolesEnum.RECEPTIONIST)
+    @ApiBearerAuth()
+    @Patch(':id/cancel')
+    cancel(@Param('id') id: string) {
+        return this.reservationService.cancelReservation(id);
+    }
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(RolesEnum.ADMIN)
+    @ApiBearerAuth()
     @Delete(':id')
     delete(@Param('id') id: string) {
         return this.reservationService.deleteReservation(id);
