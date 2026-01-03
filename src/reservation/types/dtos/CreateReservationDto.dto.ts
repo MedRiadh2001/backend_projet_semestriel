@@ -16,10 +16,6 @@ export class CreateReservationDto {
     @Type(() => Date)
     endDate: Date;
 
-    @ApiProperty({ enum: ReservationStatusEnum })
-    @IsEnum(ReservationStatusEnum)
-    status: ReservationStatusEnum;
-
     @ApiProperty()
     @IsUUID()
     @IsNotEmpty()
