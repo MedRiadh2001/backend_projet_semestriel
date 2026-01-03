@@ -3,11 +3,14 @@ import { ReservationRepository } from './repository/Reservation.repository';
 import { RoomRepository } from '../rooms/repository/Room.repository';
 import { ClientRepository } from './repository/Client.repository';
 import { UpdateReservationDto } from './types/dtos/UpdateReservationDto.dto';
-import { RoomStatusEnum } from '../rooms/types/enums/RoomStatus.enum';
 import { CreateReservationDto } from './types/dtos/CreateReservationDto.dto';
 import { ClientService } from './client.service';
 import { ReservationStatusEnum } from './types/enums/ReservationStatus.enum';
 import { IClient } from './types/interfaces/IClient.interface';
+import { PdfService } from './pdfService.service';
+import * as path from 'path';
+import * as os from 'os';
+import { RoomStatusEnum } from '../rooms/types/enums/RoomStatus.enum';
 
 @Injectable()
 export class ReservationService {
@@ -16,6 +19,7 @@ export class ReservationService {
         private readonly roomRepository: RoomRepository,
         private readonly clientRepository: ClientRepository,
         private readonly clientService: ClientService,
+        private readonly pdfService: PdfService,
     ) { }
 
     async getAllReservations() {
@@ -88,7 +92,21 @@ export class ReservationService {
 
         const savedReservation = await this.reservationRepository.save(reservation);
 
-        return savedReservation;
+        const fullReservation = await this.reservationRepository.findOne({
+            where: { id: savedReservation.id },
+            relations: ['client', 'room', 'room.roomType'],
+        });
+
+        if (!fullReservation) {
+            throw new NotFoundException('Reservation not found after saving');
+        }
+
+        const downloadsPath = path.join(os.homedir(), 'Downloads'); // chemin vers Downloads
+        const outputPath = path.join(downloadsPath, `reservation-${fullReservation.id}.pdf`);
+
+        await this.pdfService.generateReservationPdf(fullReservation, outputPath);
+
+        return fullReservation;
     }
 
     async confirmReservation(id: string) {
@@ -108,6 +126,11 @@ export class ReservationService {
         }
 
         reservation.status = ReservationStatusEnum.CONFIRMED;
+
+        if (reservation.room) {
+            reservation.room.status = RoomStatusEnum.BOOKED;
+            await this.roomRepository.save(reservation.room);
+        }
 
         return this.reservationRepository.save(reservation);
     }
@@ -132,6 +155,11 @@ export class ReservationService {
         }
 
         reservation.status = ReservationStatusEnum.CANCELLED;
+
+        if (reservation.room) {
+            reservation.room.status = RoomStatusEnum.AVAILABLE;
+            await this.roomRepository.save(reservation.room);
+        }
 
         return this.reservationRepository.save(reservation);
     }
