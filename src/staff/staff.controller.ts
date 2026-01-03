@@ -68,6 +68,13 @@ export class StaffController {
         return this.staffService.changePassword(req.user.id, dto);
     }
 
+    @Patch('force-password')
+    @UseGuards(JwtAuthGuard)
+    async activateForgetPassword(@Req() req) {
+        const staffId = req.user.id;
+        return this.staffService.activateForgetPassword(staffId);
+    }
+
     @Patch('reset-password/:id')
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(RolesEnum.ADMIN)

@@ -33,6 +33,10 @@ export class Staff implements IStaff {
     @ApiProperty()
     password: string;
 
+    @Column({ default: false })
+    @ApiProperty({ description: 'If true, admin can reset the password' })
+    forgetPassword: boolean;
+
     @CreateDateColumn()
     createdAt: Date;
 

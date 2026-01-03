@@ -6,6 +6,7 @@ import { CreateStaffDto } from './types/dtos/CreateStaffDto.dto';
 import { UpdateStaffDto } from './types/dtos/UpdateStaffDto.dto';
 import { ChangePasswordDto } from './types/dtos/ChangePasswordDto.dto';
 import { ResetPasswordAdminDto } from './types/dtos/ResetPasswordAdminDto.dto';
+import { RolesEnum } from './types/enums/role.enum';
 
 @Injectable()
 export class StaffService {
@@ -71,14 +72,32 @@ export class StaffService {
     async resetPasswordByAdmin(adminId: string, staffId: string, resetPasswordDtoAdmin: ResetPasswordAdminDto) {
         const admin = await this.staffRepository.findOne({ where: { id: adminId } });
         if (!admin) throw new NotFoundException('Admin not found');
-        if (admin.role !== 'ADMIN') throw new UnauthorizedException('Only admins can reset passwords');
+        if (admin.role !== RolesEnum.ADMIN) throw new UnauthorizedException('Only admins can reset passwords');
 
         const staff = await this.staffRepository.findOne({ where: { id: staffId } });
         if (!staff) throw new NotFoundException('Staff not found');
 
+        if (!staff.forgetPassword) {
+            throw new BadRequestException(
+                'Password reset by admin is not allowed for this user'
+            );
+        }
+
         const hashedPassword = await bcrypt.hash(resetPasswordDtoAdmin.newPassword, 10);
         staff.password = hashedPassword;
 
+        staff.forgetPassword = false;
+
+        console.log(`Admin ${admin.id} reset password for staff ${staff.id}`);
+
+        return this.staffRepository.save(staff);
+    }
+
+    async activateForgetPassword(staffId: string) {
+        const staff = await this.staffRepository.findOne({ where: { id: staffId } });
+        if (!staff) throw new NotFoundException('Staff not found');
+
+        staff.forgetPassword = true;
         return this.staffRepository.save(staff);
     }
 
