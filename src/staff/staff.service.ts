@@ -93,8 +93,8 @@ export class StaffService {
         return this.staffRepository.save(staff);
     }
 
-    async activateForgetPassword(staffId: string) {
-        const staff = await this.staffRepository.findOne({ where: { id: staffId } });
+    async activateForgetPassword(email: string) {
+        const staff = await this.staffRepository.findOne({ where: { email: email } });
         if (!staff) throw new NotFoundException('Staff not found');
 
         staff.forgetPassword = true;

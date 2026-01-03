@@ -92,6 +92,11 @@ export class ReservationService {
 
         const savedReservation = await this.reservationRepository.save(reservation);
 
+        if (reservation.room) {
+            reservation.room.status = RoomStatusEnum.WAITING_FOR_CONFIRMATION;
+            await this.roomRepository.save(reservation.room);
+        }
+
         const fullReservation = await this.reservationRepository.findOne({
             where: { id: savedReservation.id },
             relations: ['client', 'room', 'room.roomType'],
