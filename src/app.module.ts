@@ -6,6 +6,9 @@ import { StaffModule } from './staff/staff.module';
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
+import { RoomsModule } from './rooms/rooms.module';
+import { ReservationModule } from './reservation/reservation.module';
+import { FactureModule } from './facture/facture.module';
 
 @Module({
   imports: [
@@ -30,6 +33,9 @@ import { AuthModule } from './auth/auth.module';
     SharedModule,
     StaffModule,
     AuthModule,
+    RoomsModule,
+    ReservationModule,
+    FactureModule,
   ],
   controllers: [AppController],
   providers: [AppService],

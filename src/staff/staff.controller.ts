@@ -4,9 +4,9 @@ import { CreateStaffDto } from './types/dtos/CreateStaffDto.dto';
 import { UpdateStaffDto } from './types/dtos/UpdateStaffDto.dto';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { RolesEnum } from './types/enums/role.enum';
-import { RolesGuard } from 'src/shared/guards/RoleGuard.guard';
-import { Roles } from 'src/shared/decorators/RoleDecorator.decorator';
-import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
+import { RolesGuard } from '../shared/guards/RoleGuard.guard';
+import { Roles } from '../shared/decorators/RoleDecorator.decorator';
 
 @ApiTags('Staff')
 @Controller('staff')
