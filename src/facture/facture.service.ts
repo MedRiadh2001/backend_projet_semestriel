@@ -14,7 +14,7 @@ export class FactureService {
     ) { }
 
     async getAllFactures() {
-        return this.factureRepository.find({ relations: ['reservation'] });
+        return this.factureRepository.find({ relations: ['reservation', 'reservation.client', 'reservation.room', 'reservation.room.roomType'] });
     }
 
     async getFactureById(id: string) {

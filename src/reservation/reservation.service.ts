@@ -23,7 +23,9 @@ export class ReservationService {
     ) { }
 
     async getAllReservations() {
-        return this.reservationRepository.find();
+        return this.reservationRepository.find({
+            relations: ['client', 'room', 'room.roomType'],
+        });
     }
 
     async getReservationById(id: string) {
