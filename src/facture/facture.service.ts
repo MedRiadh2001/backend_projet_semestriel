@@ -3,12 +3,14 @@ import { FactureRepository } from './repository/Facture.repository';
 import { ReservationRepository } from '../reservation/repository/Reservation.repository';
 import { CreateFactureDto } from './types/dtos/CreateFactureDto.dto';
 import { UpdateFactureDto } from './types/dtos/UpdateFactureDto.dto';
+import { FacturePdfService } from './facture-pdf.service';
 
 @Injectable()
 export class FactureService {
     constructor(
         private readonly factureRepository: FactureRepository,
-        private readonly reservationRepository: ReservationRepository
+        private readonly reservationRepository: ReservationRepository,
+        private readonly facturePdfService: FacturePdfService,
     ) { }
 
     async getAllFactures() {
@@ -22,7 +24,14 @@ export class FactureService {
     }
 
     async createFacture(dto: CreateFactureDto) {
-        const reservation = await this.reservationRepository.findOne({ where: { id: dto.reservationId } });
+        const reservation = await this.reservationRepository.findOne({
+            where: { id: dto.reservationId },
+            relations: [
+                'room',
+                'room.roomType',
+                'client',
+            ],
+        });
         if (!reservation) throw new NotFoundException('Reservation not found');
 
         const existingInvoice = await this.factureRepository.findOne({
@@ -33,20 +42,34 @@ export class FactureService {
             throw new BadRequestException('Cette réservation a déjà une facture');
         }
 
+        const start = new Date(reservation.startDate);
+        const end = new Date(reservation.endDate);
+
+        const diffTime = end.getTime() - start.getTime();
+        const nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        const totalAmount = nights * Number(reservation.room.roomType.pricePerNight);
+
         const facture = this.factureRepository.create({
-            issueDate: dto.issueDate,
-            totalAmount: dto.totalAmount,
+            issueDate: new Date(),
+            totalAmount,
             paymentType: dto.paymentType,
             reservation
         });
 
-        return this.factureRepository.save(facture);
+        const savedFacture = await this.factureRepository.save(facture);
+
+        await this.facturePdfService.generateFacturePdf({
+            ...savedFacture,
+            reservation,
+        });
+
+        return savedFacture;
     }
 
     async updateFacture(id: string, dto: UpdateFactureDto) {
         const facture = await this.getFactureById(id);
 
-        if (dto.issueDate) facture.issueDate = dto.issueDate;
         if (dto.totalAmount !== undefined) facture.totalAmount = dto.totalAmount;
         if (dto.paymentType) facture.paymentType = dto.paymentType;
 

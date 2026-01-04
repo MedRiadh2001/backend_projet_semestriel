@@ -3,9 +3,6 @@ import { IsOptional, IsEnum, IsNumber } from 'class-validator';
 import { PaymentTypeEnum } from '../enums/PaymentTypeEnum.enum';
 
 export class UpdateFactureDto {
-    @ApiPropertyOptional({ type: Date })
-    @IsOptional()
-    issueDate?: Date;
 
     @ApiPropertyOptional()
     @IsNumber()
